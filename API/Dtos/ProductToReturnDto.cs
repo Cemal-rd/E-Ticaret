@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace API.Entities
+namespace API.Dtos
 {
-    public class Product:BaseEntity
+    public class ProductToReturnDto
     {
-       
+        public int Id { get; set; }
         public  string ProductName  { get; set; }
         public string Description { get; set; }
         public string Img1 { get; set; }
@@ -16,10 +16,8 @@ namespace API.Entities
         public decimal Price { get; set; }
         public int Stock { get; set; }
         //related ent
-        public Category Category{ get; set; }
-        public int CategoryId { get; set; }
+        public string Category { get; set; }
+        
                
- 
     }
-    
 }
