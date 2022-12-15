@@ -33,7 +33,7 @@ namespace Infrastructure.Data
 
         public async Task<Category> GetCategoryByIdAsync(int id)
         {
-            return await _context.Categories.FindAsync();
+            return await _context.Categories.FindAsync(id);
         }
 
         public async Task<bool> SaveChangesAsync()
