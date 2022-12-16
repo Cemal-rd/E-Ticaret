@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Dtos;
+using API.Utils;
 using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
@@ -10,13 +11,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-    public class CustomersController:BaseApiController
+    public class CustomersController : BaseApiController
     {
         public ICustomerRepository _repository;
         private readonly IMapper _mapper;
-        
 
-        public CustomersController(ICustomerRepository repository,IMapper mapper)
+
+        public CustomersController(ICustomerRepository repository, IMapper mapper)
         {
             _mapper = mapper;
             _repository = repository;
@@ -26,39 +27,174 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<CustomerDto>>> GetCustomers()
         {
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                var customers = await _repository.GetCustomerAsync();
+                var mappedCustomers = _mapper.Map<IReadOnlyList<Customer>, IReadOnlyList<CustomerDto>>(customers);
+                var response = new Response(true, mappedCustomers, null);
+                return Ok(response);
 
-            var customers = await _repository.GetCustomerAsync();
-            var mappedCustomers=_mapper.Map<IReadOnlyList<Customer>,IReadOnlyList<CustomerDto>>(customers);
-            return Ok(mappedCustomers);
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
+
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerDto>> GetCustomer(int id)
         {
-            var customer = await _repository.GetCustomerByIdAsync(id);
-            return _mapper.Map<Customer, CustomerDto>(customer);
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                var customer = await _repository.GetCustomerByIdAsync(id);
+                var MappedCustomer = _mapper.Map<Customer, CustomerDto>(customer);
+                if (MappedCustomer == null)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status404NotFound, "Customer not found.");
+                    var response = new Response(false, null, responseError);
+                    return NotFound(response);
+                }
+                else
+                {
+                    var response = new Response(true, MappedCustomer, null);
+                    return Ok(response);
+                }
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
         }
 
         [HttpPost]
         public async Task<ActionResult> AddCustomer(Customer customer)
         {
-            _repository.Add(customer);
-            return Ok(await _repository.SaveChangesAsync());
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                if (customer.Password == "string")
+                {
+                    var responseError = new ResponseError(StatusCodes.Status400BadRequest, "password cannot be empty");
+                    var response = new Response(false, ModelState, responseError);
+                    return BadRequest(response);
+                }
+                else
+                {
+                    _repository.Add(customer);
+                    await _repository.SaveChangesAsync();
+                    var response = new Response(true, customer, null);
+                    return Ok(response);
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateCustomer(string id, Customer customer)
+        public async Task<ActionResult> UpdateCustomer(int id, Customer customer)
         {
-            _repository.Update(customer);
-            return Ok(await _repository.SaveChangesAsync());
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                if (id != customer.Id)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status404NotFound, "Customer not found.");
+                    var response = new Response(false, null, responseError);
+                    return NotFound(response);
+
+                }
+                else
+                {
+                    _repository.Update(customer);
+                    await _repository.SaveChangesAsync();
+                    var response = new Response(true, customer, null);
+                    return Ok(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCustomer(int id)
         {
-            var customer = await _repository.GetCustomerByIdAsync(id);
-            _repository.Delete(customer);
-            return Ok(await _repository.SaveChangesAsync());
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                var customer = await _repository.GetCustomerByIdAsync(id);
+                if (customer == null)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status404NotFound, "Product not found.");
+                    var response = new Response(false, null, responseError);
+                    return NotFound(response);
+
+                }
+                else
+                {
+                    _repository.Delete(customer);
+                    await _repository.SaveChangesAsync();
+                    var response = new Response(true, customer, null);
+                    return Ok(response);
+
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
+
         }
 
     }

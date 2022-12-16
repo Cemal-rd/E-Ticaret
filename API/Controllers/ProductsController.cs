@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using API.Data;
 using API.Dtos;
+using API.Utils;
 using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
@@ -13,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-  
+
     public class ProductsController : BaseApiController
     {
         public IProductRepository _repository;
@@ -29,39 +30,176 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<ProductToReturnDto>>> GetProducts()
         {
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                var products = await _repository.GetProductsAsync();
+                var mappedProducts = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDto>>(products);
+                var response = new Response(true, mappedProducts, null);
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
 
-            var products = await _repository.GetProductsAsync();
-            var mappedProducts=_mapper.Map<IReadOnlyList<Product>,IReadOnlyList<ProductToReturnDto>>(products);
-            return Ok(mappedProducts);
+
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductToReturnDto>> GetProduct(int id)
         {
-            var product = await _repository.GetProductByIdAsync(id);
-            return _mapper.Map<Product, ProductToReturnDto>(product);
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                var product = await _repository.GetProductByIdAsync(id);
+                var MappedProduct = _mapper.Map<Product, ProductToReturnDto>(product);
+                if (MappedProduct == null)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status404NotFound, "Product not found.");
+                    var response = new Response(false, null, responseError);
+                    return NotFound(response);
+
+                }
+                else
+                {
+                    var response = new Response(true, MappedProduct, null);
+                    return Ok(response);
+
+                }
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
         }
 
         [HttpPost]
         public async Task<ActionResult> AddProduct(Product product)
         {
-            _repository.Add(product);
-            return Ok(await _repository.SaveChangesAsync());
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                if (product.CategoryId == 0)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status400BadRequest, "cannot be null");
+                    var response = new Response(false, ModelState, responseError);
+                    return BadRequest(response);
+                }
+                else
+                {
+                    _repository.Add(product);
+                    await _repository.SaveChangesAsync();
+                    var response = new Response(true, product, null);
+                    return Ok(response);
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateProduct(string id, Product product)
+        public async Task<ActionResult> UpdateProduct(int id, Product product)
         {
-            _repository.Update(product);
-            return Ok(await _repository.SaveChangesAsync());
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                if (id != product.Id)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status404NotFound, "Product not found.");
+                    var response = new Response(false, null, responseError);
+                    return NotFound(response);
+
+                }
+                else
+                {
+                    _repository.Update(product);
+                    await _repository.SaveChangesAsync();
+                    var response = new Response(true, product, null);
+                    return Ok(response);
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
+
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteProduct(int id)
         {
-            var product = await _repository.GetProductByIdAsync(id);
-            _repository.Delete(product);
-            return Ok(await _repository.SaveChangesAsync());
+            if (!ModelState.IsValid)
+            {
+                var responseError = new ResponseError(StatusCodes.Status400BadRequest, "invalid model");
+                var response = new Response(false, ModelState, responseError);
+                return BadRequest(response);
+            }
+            try
+            {
+                var product = await _repository.GetProductByIdAsync(id);
+                if (product == null)
+                {
+                    var responseError = new ResponseError(StatusCodes.Status404NotFound, "Product not found.");
+                    var response = new Response(false, null, responseError);
+                    return NotFound(response);
+
+                }
+                else
+                {
+                    _repository.Delete(product);
+                    await _repository.SaveChangesAsync();
+                    var response = new Response(true, product, null);
+                    return Ok(response);
+
+                }
+
+            }
+            catch (Exception e)
+            {
+                var responseError = new ResponseError(StatusCodes.Status500InternalServerError, e.Message);
+                var response = new Response(false, null, responseError);
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
         }
 
     }
