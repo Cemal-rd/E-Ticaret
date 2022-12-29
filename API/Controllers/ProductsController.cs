@@ -19,10 +19,13 @@ namespace API.Controllers
     {
         public IProductRepository _repository;
         private readonly IMapper _mapper;
+        private readonly ILogger<ProductsController> _logger;
 
-        public ProductsController(IProductRepository repository, IMapper mapper)
+        public ProductsController(IProductRepository repository, IMapper mapper,ILogger<ProductsController> logger)
         {
+           
             _mapper = mapper;
+            this._logger = logger;
             _repository = repository;
 
         }
@@ -40,6 +43,7 @@ namespace API.Controllers
             {
                 var products = await _repository.GetProductsAsync();
                 var mappedProducts = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDto>>(products);
+                _logger.LogInformation("getproductokey");
                 var response = new Response(true, mappedProducts, null);
                 return Ok(response);
             }
