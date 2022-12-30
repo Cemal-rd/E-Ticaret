@@ -1,12 +1,12 @@
 <nav class="navigation">
     <div class="navbar">
         <div class="left">
-            <a mat-button routerLink="/" routerLinkActive="active" class="nav-link">Home</a>
-            <a mat-button routerLink="/product" routerLinkActive="active" class="nav-link">Product</a>
+            <a *ngIf="showLogout" mat-button routerLink="/" routerLinkActive="active" class="nav-link">Home</a>
+            <a *ngIf="showLogout" mat-button routerLink="/product" routerLinkActive="active" class="nav-link">Product</a>
             <router-outlet></router-outlet>
         </div>
         <div class="right">
-        <a  class="nav-link" >Logout</a>   
+            <a *ngIf="showLogout" class="nav-link" (click)="logout()">Logout</a> 
         </div>
     </div>
 </nav>

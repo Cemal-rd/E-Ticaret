@@ -25,7 +25,7 @@ import { LoadingScreenComponent } from './Components/Shared/loading-screen/loadi
 import { ConfirmationDialogComponent } from './Components/Shared/confirmation-dialog/confirmation-dialog.component';
 import { MatTableExporterModule } from 'mat-table-exporter';
 import { LoginComponent } from './login/login.component';
-import { SignupComponent } from './signup/signup.component';
+import { RegisterComponent } from './Components/register/register.component';
 
 
 
@@ -38,7 +38,7 @@ import { SignupComponent } from './signup/signup.component';
     LoadingScreenComponent,
     ConfirmationDialogComponent,
     LoginComponent,
-    SignupComponent
+    RegisterComponent
     
   ],
   imports: [

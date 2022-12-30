@@ -35,7 +35,7 @@ namespace API.Controllers
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            return Ok("Kullanıcı başarıyla oluşturuldu");
+            return Ok();
 
         }
         [HttpPost("login")]
@@ -53,7 +53,7 @@ namespace API.Controllers
            if(!VerifyPasswordHash(request.Password,user.PasswordHash,user.PasswordSalt)){
             return BadRequest("password is incorrect");
            }
-           return Ok($"Tekrar Hoşgeldin,{user.Email}!");
+           return Ok();
 
         }
         private void CreatePasswordHash(string password,out byte[] passwordHash,out byte[] passwordSalt){

@@ -30,10 +30,13 @@ export class AppComponent {
     if(this.utils.isLoggedIn){
       this.showLogout = this.utils.isLoggedIn;
     }
+
   }
+  
 
   logout(): void {
     this.auth.logout();
+    
   }
 
 }
